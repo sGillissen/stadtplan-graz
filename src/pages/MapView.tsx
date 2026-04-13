@@ -1,16 +1,7 @@
 import { Link } from "react-router-dom";
 import GrazMap from "@/components/GrazMap";
-import { streets } from "@/data/streets";
 
 export default function MapView() {
-  // Alle Straßen als Marker anzeigen
-  const markers = streets.map((s) => ({
-    lat: s.lat,
-    lng: s.lng,
-    color: "#6366f1",
-    label: s.name,
-  }));
-
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
@@ -28,7 +19,7 @@ export default function MapView() {
 
       {/* Karte */}
       <div className="flex-1">
-        <GrazMap markers={markers} clickDisabled />
+        <GrazMap clickDisabled />
       </div>
     </div>
   );
