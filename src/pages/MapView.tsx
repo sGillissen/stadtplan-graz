@@ -44,16 +44,23 @@ export default function MapView() {
     }
     timerRef.current = setTimeout(async () => {
       try {
-        const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-          q + ", Graz"
-        )}&format=json&addressdetails=1&limit=5&viewbox=${GRAZ_VIEWBOX}&bounded=1`;
-        const res = await fetch(url, {
-          headers: { "Accept-Language": "de" },
+        const params = new URLSearchParams({
+          q: q + ", Graz",
+          format: "json",
+          addressdetails: "1",
+          limit: "5",
+          viewbox: GRAZ_VIEWBOX,
+          bounded: "1",
+          "accept-language": "de",
         });
+        const url = `https://nominatim.openstreetmap.org/search?${params}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data: NominatimResult[] = await res.json();
         setResults(data);
         setShowResults(data.length > 0);
-      } catch {
+      } catch (err) {
+        console.error("Nominatim-Suche fehlgeschlagen:", err);
         setResults([]);
       }
     }, 350);
