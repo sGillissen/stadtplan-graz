@@ -54,6 +54,22 @@ export default function Home() {
             </div>
           </Link>
 
+          <Link to="/stadtplan" className="block">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6 border-l-4 border-violet-500">
+              <div className="flex items-center gap-4">
+                <div className="text-3xl">🗺️</div>
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-800">
+                    Stadtplan
+                  </h2>
+                  <p className="text-slate-500 mt-1">
+                    Alle Straßen und Plätze auf der Karte ansehen
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Link>
+
           <Link to="/fortschritt" className="block">
             <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6 border-l-4 border-amber-500">
               <div className="flex items-center gap-4">
