@@ -131,7 +131,7 @@ export default function MapView() {
           <p className="text-xs text-slate-400 mt-1">{error}</p>
         )}
         {showResults && (
-          <ul className="absolute left-4 right-4 bg-white border rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
+          <ul className="absolute left-4 right-4 bg-white border rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto z-[1000]">
             {results.map((r) => (
               <li
                 key={r.place_id}
