@@ -52,9 +52,7 @@ export default function MapView() {
     timerRef.current = setTimeout(async () => {
       try {
         const params = new URLSearchParams({
-          street: q,
-          city: "Graz",
-          country: "Austria",
+          q: q + " Graz",
           format: "json",
           addressdetails: "1",
           limit: "5",
