@@ -106,7 +106,7 @@ export default function MapView() {
       </div>
 
       {/* Suchfeld */}
-      <div className="bg-white px-4 py-2 border-b shrink-0 relative z-40" ref={wrapperRef}>
+      <div className="bg-white px-4 py-2 border-b shrink-0 relative z-[1000]" ref={wrapperRef}>
         <div className="relative">
           <input
             type="text"
