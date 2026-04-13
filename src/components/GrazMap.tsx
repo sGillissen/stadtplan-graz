@@ -27,10 +27,19 @@ interface GrazMapProps {
   }>;
   /** Linie zwischen zwei Punkten */
   line?: { from: [number, number]; to: [number, number]; color?: string };
+  /** Mehrere Polylines (z.B. Straßenverläufe) */
+  polylines?: Array<{
+    positions: [number, number][];
+    color?: string;
+    weight?: number;
+    label?: string;
+  }>;
   /** Klick deaktivieren */
   clickDisabled?: boolean;
   /** Karte nach Antwort auf bestimmten Punkt zentrieren */
   flyTo?: [number, number];
+  /** Auf Bounds zoomen (statt flyTo-Punkt) */
+  fitBounds?: [[number, number], [number, number]];
   /** Cursor-Stil */
   crosshair?: boolean;
 }
@@ -64,12 +73,25 @@ function FlyToHandler({ position }: { position?: [number, number] }) {
   return null;
 }
 
+/** Fit-Bounds Animation */
+function FitBoundsHandler({ bounds }: { bounds?: [[number, number], [number, number]] }) {
+  const map = useMap();
+  useEffect(() => {
+    if (bounds) {
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16, duration: 0.8 });
+    }
+  }, [bounds, map]);
+  return null;
+}
+
 export default function GrazMap({
   onMapClick,
   markers = [],
   line,
+  polylines = [],
   clickDisabled,
   flyTo,
+  fitBounds,
   crosshair,
 }: GrazMapProps) {
   return (
@@ -87,6 +109,26 @@ export default function GrazMap({
 
       <ClickHandler onClick={onMapClick} disabled={clickDisabled} />
       <FlyToHandler position={flyTo} />
+      <FitBoundsHandler bounds={fitBounds} />
+
+      {/* Polylines (Straßenverläufe) */}
+      {polylines.map((p, i) => (
+        <Polyline
+          key={i}
+          positions={p.positions}
+          pathOptions={{
+            color: p.color || "#e63946",
+            weight: p.weight || 4,
+            opacity: 0.8,
+          }}
+        >
+          {p.label && (
+            <Tooltip sticky>
+              <span className="font-semibold">{p.label}</span>
+            </Tooltip>
+          )}
+        </Polyline>
+      ))}
 
       {/* Verbindungslinie (z.B. Klick ↔ richtige Position) */}
       {line && (
