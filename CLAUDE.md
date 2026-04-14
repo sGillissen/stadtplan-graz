@@ -1,30 +1,31 @@
-# Stadtplan Graz – Straßen-Quiz
+# Stadtplan Graz
 
 ## Projekt-Info
 - **Repo:** sGillissen/stadtplan-graz
 - **URL:** stadtplan-graz.pages.dev
 - **Stack:** Vite + React + TypeScript + Tailwind + Leaflet
 - **Deployment:** Cloudflare Pages via GitHub Actions (Push auf `main`)
-- **Backend:** Supabase (Auth + DB)
+- **Backend:** Supabase (Auth + DB) – aktuell nicht aktiv genutzt
 
 ## Architektur
 
 ### Seiten (React Router)
 | Route | Seite | Beschreibung |
 |-------|-------|-------------|
-| `/` | Home | Startseite mit Menükarten |
-| `/stadtplan` | MapView | Interaktiver Stadtplan mit Straßenliste |
-| `/wo-liegt` | QuizLocation | Quiz: Name → Klick auf Karte |
-| `/wie-heisst` | QuizName | Quiz: Marker → Name eintippen |
-| `/fortschritt` | Progress | Lernfortschritt-Übersicht |
+| `/` | MapView | Interaktiver Stadtplan (Startseite) |
+| `/stadtplan` | Redirect → `/` | Alte URL, leitet um |
 
 ### Wichtige Komponenten
 - `GrazMap.tsx` – Wiederverwendbare Leaflet-Karte mit Props: `markers`, `polylines`, `flyTo`, `fitBounds`, `onMapClick`, `crosshair`, `clickDisabled`
-- `MapView.tsx` – Stadtplan-Ansicht mit Sidebar (Straßenliste + Filter) und Karte
+- `MapView.tsx` – Stadtplan-Ansicht mit zwei Suchfeldern (Nominatim + Listen-Filter), Sidebar (Straßenliste) und Karte
 
 ### Daten
-- `src/data/streets.ts` – Quiz-Straßen mit Name + Koordinaten (für Quiz-Modi)
 - `src/data/streetRoutes.ts` – 130+ Straßenverläufe aus OpenStreetMap Overpass API (primary + secondary Roads); statisch generiert, Segmente als Koordinaten-Arrays
+
+### Nicht mehr genutzte Dateien (Quiz-Überreste)
+- `src/pages/Home.tsx`, `QuizLocation.tsx`, `QuizName.tsx`, `Progress.tsx` – alte Quiz-Seiten, nicht importiert
+- `src/data/streets.ts` – Quiz-Straßendaten, nicht importiert
+- `src/hooks/useProgress.ts` – Quiz-Fortschritt, nicht importiert
 
 ## Patterns & Konventionen
 
