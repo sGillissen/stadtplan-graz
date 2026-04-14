@@ -14,7 +14,7 @@ interface NominatimResult {
 export default function MapView() {
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState<StreetRoute | null>(null);
-  const [typeFilter, setTypeFilter] = useState<"all" | "primary" | "secondary" | "tertiary">("all");
+  const [typeFilter, setTypeFilter] = useState<"all" | "primary" | "secondary">("all");
 
   // POI-Layer anzeigen
   const [showSeniorenheime, setShowSeniorenheime] = useState(false);
@@ -255,16 +255,6 @@ export default function MapView() {
                 }`}
               >
                 Nebenstraßen
-              </button>
-              <button
-                onClick={() => setTypeFilter("tertiary")}
-                className={`px-2 py-1 text-xs rounded-md transition-colors ${
-                  typeFilter === "tertiary"
-                    ? "bg-slate-600 text-white"
-                    : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                Sonstige
               </button>
             </div>
           </div>
