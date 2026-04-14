@@ -1,11 +1,81 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import GrazMap from "@/components/GrazMap";
 import { streetRoutes, StreetRoute } from "@/data/streetRoutes";
+
+interface NominatimResult {
+  place_id: number;
+  display_name: string;
+  lat: string;
+  lon: string;
+}
 
 export default function MapView() {
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState<StreetRoute | null>(null);
   const [typeFilter, setTypeFilter] = useState<"all" | "primary" | "secondary">("all");
+
+  // Nominatim-Suche
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<NominatimResult[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchMarker, setSearchMarker] = useState<{ lat: number; lng: number; label: string } | null>(null);
+  const [flyTarget, setFlyTarget] = useState<[number, number] | undefined>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Klick außerhalb schließt Dropdown
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Nominatim-Abfrage mit Debounce
+  const doSearch = useCallback((q: string) => {
+    if (q.trim().length < 2) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+    const url =
+      `https://nominatim.openstreetmap.org/search?` +
+      `q=${encodeURIComponent(q + " Graz")}` +
+      `&format=json&limit=6&countrycodes=at&accept-language=de` +
+      `&viewbox=15.35,47.12,15.55,47.02&bounded=1`;
+    fetch(url)
+      .then((r) => r.json())
+      .then((data: NominatimResult[]) => {
+        setSearchResults(data);
+        setShowDropdown(data.length > 0);
+      })
+      .catch(() => {
+        setSearchResults([]);
+        setShowDropdown(false);
+      });
+  }, []);
+
+  const handleSearchInput = (val: string) => {
+    setSearchQuery(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => doSearch(val), 300);
+  };
+
+  const handleSelectResult = (r: NominatimResult) => {
+    const lat = parseFloat(r.lat);
+    const lng = parseFloat(r.lon);
+    // Kurzname: erster Teil vor dem Komma
+    const label = r.display_name.split(",")[0].trim();
+    setSearchMarker({ lat, lng, label });
+    setFlyTarget([lat, lng]);
+    setSearchQuery(label);
+    setShowDropdown(false);
+    // Auswahl in der Straßenliste aufheben
+    setSelected(null);
+  };
 
   // Gefilterte Straßenliste
   const filtered = useMemo(() => {
@@ -59,13 +129,40 @@ export default function MapView() {
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         <div className="w-72 bg-white border-r flex flex-col shrink-0">
-          {/* Suchfeld */}
+          {/* Allgemeine Suche (Nominatim) */}
+          <div ref={wrapperRef} className="p-3 border-b relative z-[1000]">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => handleSearchInput(e.target.value)}
+              onFocus={() => { if (searchResults.length > 0) setShowDropdown(true); }}
+              placeholder="🔍 Adresse / Ort suchen…"
+              className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            {showDropdown && (
+              <ul className="absolute left-3 right-3 mt-1 bg-white border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                {searchResults.map((r) => (
+                  <li
+                    key={r.place_id}
+                    onClick={() => handleSelectResult(r)}
+                    className="px-3 py-2 text-sm text-slate-700 hover:bg-blue-50 cursor-pointer border-b last:border-b-0"
+                  >
+                    {r.display_name.length > 60
+                      ? r.display_name.substring(0, 60) + "…"
+                      : r.display_name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Liste filtern */}
           <div className="p-3 border-b space-y-2">
             <input
               type="text"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              placeholder="Straße suchen…"
+              placeholder="Liste filtern…"
               className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
             />
             {/* Typ-Filter */}
@@ -108,7 +205,11 @@ export default function MapView() {
             {filtered.map((s) => (
               <button
                 key={s.name}
-                onClick={() => setSelected(s === selected ? null : s)}
+                onClick={() => {
+                  setSelected(s === selected ? null : s);
+                  setSearchMarker(null);
+                  setFlyTarget(undefined);
+                }}
                 className={`w-full text-left px-3 py-2 text-sm border-b transition-colors flex items-center gap-2 ${
                   selected?.name === s.name
                     ? "bg-violet-50 text-violet-900 font-medium"
@@ -144,6 +245,12 @@ export default function MapView() {
             clickDisabled
             polylines={polylines}
             fitBounds={fitBounds}
+            flyTo={flyTarget}
+            markers={
+              searchMarker
+                ? [{ lat: searchMarker.lat, lng: searchMarker.lng, color: "#3b82f6", label: searchMarker.label }]
+                : []
+            }
           />
         </div>
       </div>
