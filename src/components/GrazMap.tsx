@@ -5,6 +5,7 @@ import {
   CircleMarker,
   Marker,
   Polyline,
+  Polygon,
   Popup,
   Tooltip,
   useMapEvents,
@@ -50,6 +51,15 @@ interface GrazMapProps {
     name: string;
     details?: string;
     color?: string;
+  }>;
+  /** Polygone (z.B. Stadtbezirke) */
+  polygons?: Array<{
+    rings: [number, number][][];
+    color?: string;
+    fillColor?: string;
+    fillOpacity?: number;
+    weight?: number;
+    label?: string;
   }>;
   /** Cursor-Stil */
   crosshair?: boolean;
@@ -116,6 +126,7 @@ export default function GrazMap({
   line,
   polylines = [],
   poiMarkers = [],
+  polygons = [],
   clickDisabled,
   flyTo,
   fitBounds,
@@ -133,6 +144,26 @@ export default function GrazMap({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+
+      {/* Polygone (z.B. Stadtbezirke) – zuerst gezeichnet, damit Straßen & Marker darüber liegen */}
+      {polygons.map((p, i) => (
+        <Polygon
+          key={`poly-${i}`}
+          positions={p.rings}
+          pathOptions={{
+            color: p.color || "#7c3aed",
+            fillColor: p.fillColor || p.color || "#7c3aed",
+            fillOpacity: p.fillOpacity ?? 0.15,
+            weight: p.weight || 2,
+          }}
+        >
+          {p.label && (
+            <Tooltip sticky>
+              <span className="font-semibold">{p.label}</span>
+            </Tooltip>
+          )}
+        </Polygon>
+      ))}
 
       <ClickHandler onClick={onMapClick} disabled={clickDisabled} />
       <FlyToHandler position={flyTo} />

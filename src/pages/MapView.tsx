@@ -3,6 +3,7 @@ import GrazMap from "@/components/GrazMap";
 import { streetRoutes, StreetRoute } from "@/data/streetRoutes";
 import { seniorenheime } from "@/data/seniorenheime";
 import { spitaeler } from "@/data/spitaeler";
+import { bezirke } from "@/data/bezirke";
 
 interface NominatimResult {
   place_id: number;
@@ -19,6 +20,7 @@ export default function MapView() {
   // POI-Layer anzeigen
   const [showSeniorenheime, setShowSeniorenheime] = useState(false);
   const [showSpitaeler, setShowSpitaeler] = useState(false);
+  const [showBezirke, setShowBezirke] = useState(false);
 
   // Nominatim-Suche
   const [searchQuery, setSearchQuery] = useState("");
@@ -153,6 +155,21 @@ export default function MapView() {
     return markers;
   }, [showSeniorenheime, showSpitaeler]);
 
+  // Bezirks-Polygone mit abwechselnden Farben
+  const bezirksPolygons = useMemo(() => {
+    if (!showBezirke) return [];
+    // Palette aus 6 gut unterscheidbaren Farben, rotiert über die 17 Bezirke
+    const palette = ["#7c3aed", "#0891b2", "#059669", "#d97706", "#dc2626", "#db2777"];
+    return bezirke.map((b, i) => ({
+      rings: b.rings,
+      color: palette[i % palette.length],
+      fillColor: palette[i % palette.length],
+      fillOpacity: 0.18,
+      weight: 2,
+      label: `${b.nr}. ${b.name}`,
+    }));
+  }, [showBezirke]);
+
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
@@ -161,6 +178,16 @@ export default function MapView() {
           🗺️ Stadtplan Graz
         </h1>
         <div className="flex gap-2">
+          <button
+            onClick={() => setShowBezirke(!showBezirke)}
+            className={`px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1.5 ${
+              showBezirke
+                ? "bg-violet-600 text-white"
+                : "bg-violet-50 text-violet-700 hover:bg-violet-100 border border-violet-200"
+            }`}
+          >
+            🏛 Bezirke ({bezirke.length})
+          </button>
           <button
             onClick={() => setShowSeniorenheime(!showSeniorenheime)}
             className={`px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1.5 ${
@@ -312,6 +339,7 @@ export default function MapView() {
                 : []
             }
             poiMarkers={poiMarkers}
+            polygons={bezirksPolygons}
           />
         </div>
       </div>
