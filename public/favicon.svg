@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Karten-Hintergrund -->
+  <rect x="6" y="8" width="52" height="48" rx="6" fill="#e8f4e8" stroke="#4a7c59" stroke-width="2"/>
+  <!-- Straßen -->
+  <line x1="12" y1="32" x2="52" y2="32" stroke="#f4a261" stroke-width="4" stroke-linecap="round"/>
+  <line x1="32" y1="12" x2="32" y2="52" stroke="#f4a261" stroke-width="4" stroke-linecap="round"/>
+  <line x1="16" y1="18" x2="48" y2="46" stroke="#e8e8e8" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="48" y1="18" x2="16" y2="46" stroke="#e8e8e8" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Pin -->
+  <circle cx="32" cy="28" r="7" fill="#e63946" stroke="#fff" stroke-width="2"/>
+  <circle cx="32" cy="28" r="2.5" fill="#fff"/>
+  <path d="M32 35 L28 42 H36 Z" fill="#e63946"/>
+</svg>
