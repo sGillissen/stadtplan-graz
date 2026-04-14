@@ -224,5 +224,23 @@ export const seniorenheime: Seniorenheim[] = [
     kategorie: "privat",
     lat: 47.07608,
     lng: 15.421115,
+  },
+  {
+    name: "Haus am Hilmteich",
+    adresse: "Hilmteichstraße 11",
+    plz: "8010",
+    telefon: "",
+    kategorie: "privat",
+    lat: 47.079734,
+    lng: 15.462594,
+  },
+  {
+    name: "Pflege mit Herz – Kirschenhof",
+    adresse: "Rauscherstraße 7c",
+    plz: "8054",
+    telefon: "",
+    kategorie: "privat",
+    lat: 47.000883,
+    lng: 15.391134,
   }
 ];
