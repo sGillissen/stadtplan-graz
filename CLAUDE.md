@@ -16,11 +16,21 @@
 | `/stadtplan` | Redirect → `/` | Alte URL, leitet um |
 
 ### Wichtige Komponenten
-- `GrazMap.tsx` – Wiederverwendbare Leaflet-Karte mit Props: `markers`, `polylines`, `flyTo`, `fitBounds`, `onMapClick`, `crosshair`, `clickDisabled`
-- `MapView.tsx` – Stadtplan-Ansicht mit zwei Suchfeldern (Nominatim + Listen-Filter), Sidebar (Straßenliste) und Karte
+- `GrazMap.tsx` – Wiederverwendbare Leaflet-Karte mit Props: `markers`, `polylines`, `poiMarkers`, `flyTo`, `fitBounds`, `onMapClick`, `crosshair`, `clickDisabled`
+- `MapView.tsx` – Stadtplan-Ansicht mit zwei Suchfeldern (Nominatim + Listen-Filter), Sidebar (Straßenliste), POI-Toggle-Buttons und Karte
 
 ### Daten
-- `src/data/streetRoutes.ts` – 130+ Straßenverläufe aus OpenStreetMap Overpass API (primary + secondary Roads); statisch generiert, Segmente als Koordinaten-Arrays
+- `src/data/streetRoutes.ts` – 147 Straßenverläufe aus OpenStreetMap Overpass API (primary + secondary + tertiary/residential); statisch generiert, 3.063 Segmente als Koordinaten-Arrays
+- `src/data/seniorenheime.ts` – 26 Pflegeheime/Seniorenheime in Graz (4 GGZ + 22 privat); Koordinaten via Nominatim geocodiert
+- `src/data/spitaeler.ts` – 11 Krankenhäuser in Graz (7 öffentlich + 4 privat); Koordinaten via Nominatim geocodiert
+
+### POI-System (Points of Interest)
+- Generische `poiMarkers`-Prop auf GrazMap: Array von `{ lat, lng, name, details, color }`
+- SVG-Pin-Icons via `L.divIcon` mit konfigurierbarer Farbe (`createColorIcon()`)
+- Popup mit Name + mehrzeiligen Details (Adresse, Telefon, Kategorie)
+- Toggle-Buttons im Header: jeder POI-Layer einzeln ein/ausschaltbar
+- Farbschema: Seniorenheime grün (GGZ) / blau (privat); Spitäler rot (öffentlich) / violett (privat)
+- **Neue Kategorien ergänzen:** Datendatei anlegen → in MapView importieren → State + Button + poiMarkers-Logik ergänzen
 
 ### Nicht mehr genutzte Dateien (Quiz-Überreste)
 - `src/pages/Home.tsx`, `QuizLocation.tsx`, `QuizName.tsx`, `Progress.tsx` – alte Quiz-Seiten, nicht importiert
@@ -29,10 +39,12 @@
 
 ## Patterns & Konventionen
 
-### Leaflet z-Index
-- Leaflet-Karten-Elemente haben z-Index 200-400+
-- UI-Elemente die über der Karte schweben müssen `z-[1000]` oder höher haben
-- Stacking Context beachten: Kind-Elemente können nie über dem z-Index ihres Eltern-Elements hinausragen
+### Leaflet z-Index / Stacking Context
+- Leaflet-Panes haben z-Index 200-800 (Tiles 200, Marker 600, Popup 700, Controls 800)
+- **Lösung:** Karten-Container bekommt `isolation: isolate` (Tailwind-Klasse `isolate`) → erzeugt eigenen Stacking Context, Leaflet-z-Indices können nicht über Header/Sidebar hinauswachsen
+- Header bekommt `relative z-20`, Sidebar `relative z-10` als zusätzliche Absicherung
+- Such-Dropdown über der Karte braucht `z-[1000]` auf dem **Wrapper-Div** (nicht nur auf dem Dropdown-Element selbst – Kind-Elemente können nie über dem Stacking Context des Eltern-Elements hinaus)
+- `z-index: 0` allein reicht NICHT als Stacking-Context-Fix (hat in Produktion nicht funktioniert), `isolation: isolate` ist zuverlässiger
 
 ### Overpass API (OpenStreetMap-Daten)
 - Für statische Straßendaten: `[out:json]` Query mit `area["name"="Graz"]` Filter
