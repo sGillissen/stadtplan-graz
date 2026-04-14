@@ -16,13 +16,14 @@
 | `/stadtplan` | Redirect → `/` | Alte URL, leitet um |
 
 ### Wichtige Komponenten
-- `GrazMap.tsx` – Wiederverwendbare Leaflet-Karte mit Props: `markers`, `polylines`, `poiMarkers`, `flyTo`, `fitBounds`, `onMapClick`, `crosshair`, `clickDisabled`
+- `GrazMap.tsx` – Wiederverwendbare Leaflet-Karte mit Props: `markers`, `polylines`, `polygons`, `poiMarkers`, `flyTo`, `fitBounds`, `onMapClick`, `crosshair`, `clickDisabled`
 - `MapView.tsx` – Stadtplan-Ansicht mit zwei Suchfeldern (Nominatim + Listen-Filter), Sidebar (Straßenliste), POI-Toggle-Buttons und Karte
 
 ### Daten
 - `src/data/streetRoutes.ts` – 147 Straßenverläufe aus OpenStreetMap Overpass API (primary + secondary + tertiary/residential); statisch generiert, 3.063 Segmente als Koordinaten-Arrays
 - `src/data/seniorenheime.ts` – 26 Pflegeheime/Seniorenheime in Graz (4 GGZ + 22 privat); Koordinaten via Nominatim geocodiert
 - `src/data/spitaeler.ts` – 11 Krankenhäuser in Graz (7 öffentlich + 4 privat); Koordinaten via Nominatim geocodiert
+- `src/data/bezirke.ts` – 17 Grazer Stadtbezirke als Polygon-Ringe `[lat,lng][][]`; aus OSM Overpass (relation 34719, `admin_level=9`); nummeriert I–XVII nach amtlicher Reihenfolge (Innere Stadt=1 … Puntigam=17); ~150 kB statisch im Repo
 
 ### POI-System (Points of Interest)
 - Generische `poiMarkers`-Prop auf GrazMap: Array von `{ lat, lng, name, details, color }`
@@ -51,6 +52,25 @@
 - `highway=primary` = gelbe Hauptstraßen, `highway=secondary` = wichtige Nebenstraßen
 - Ways bestehen aus Node-IDs → separate Auflösung zu Koordinaten nötig (`>;out skel qt;`)
 - Daten werden als TypeScript-Datei generiert (kein Runtime-API-Call)
+
+### ⚠️ Graz ist in OSM `admin_level=6` (Statutarstadt!), nicht 8
+- Graz ist eine Statutarstadt → in OpenStreetMap als `admin_level=6` getaggt, nicht als 8 wie normale Städte
+- Queries wie `area["name"="Graz"]["admin_level"="8"]` finden **nichts**
+- **Lösung:** Direkt mit Relation-ID arbeiten: Graz = `relation 34719` → Area-ID = `3600034719`
+  ```
+  area(3600034719)->.g;
+  rel(area.g)["admin_level"="9"]["boundary"="administrative"];
+  ```
+- **Hierarchie in Graz:** `admin_level=6` = Stadt Graz, `admin_level=9` = 17 Stadtbezirke
+- Alternativ kann `area["name"="Graz"]["admin_level"="6"]` verwendet werden
+- Nominatim Lookup: `https://nominatim.openstreetmap.org/search?q=Graz&format=json` liefert `osm_id: 34719`
+
+### Polygon-Rendering (Bezirke, Flächen)
+- `GrazMap` hat eine `polygons`-Prop: Array von `{ rings: [number,number][][], color, fillColor, fillOpacity, weight, label }`
+- Rings sind verschachtelte Arrays (`[lat,lng][][]`) – React-Leaflet `Polygon` akzeptiert das direkt, auch mehrere Ringe (Multipolygon) oder Löcher
+- Polygone werden VOR den Polylines/Markern gerendert → Straßen und Pins liegen darüber
+- Ring-Rekonstruktion aus OSM-Ways: Ways haben keine Reihenfolge, müssen an gemeinsamen Endpunkten verkettet werden (Python-Skript im Session-14-Log)
+- Farbpalette für viele Polygone: rotierende 6-Farben-Palette (`i % 6`) mit 18% Füllung und 2px Rand – unterscheidbar ohne visuell zu überladen
 
 ### Nominatim API (Geocoding)
 - Freiform-Suche: `q=Suchbegriff Graz` funktioniert besser als strukturierte `street=` Parameter
