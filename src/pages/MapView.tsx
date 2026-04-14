@@ -2,6 +2,7 @@ import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import GrazMap from "@/components/GrazMap";
 import { streetRoutes, StreetRoute } from "@/data/streetRoutes";
 import { seniorenheime } from "@/data/seniorenheime";
+import { spitaeler } from "@/data/spitaeler";
 
 interface NominatimResult {
   place_id: number;
@@ -15,8 +16,9 @@ export default function MapView() {
   const [selected, setSelected] = useState<StreetRoute | null>(null);
   const [typeFilter, setTypeFilter] = useState<"all" | "primary" | "secondary" | "tertiary">("all");
 
-  // Seniorenheime anzeigen
+  // POI-Layer anzeigen
   const [showSeniorenheime, setShowSeniorenheime] = useState(false);
+  const [showSpitaeler, setShowSpitaeler] = useState(false);
 
   // Nominatim-Suche
   const [searchQuery, setSearchQuery] = useState("");
@@ -120,17 +122,36 @@ export default function MapView() {
     return [[minLat, minLng], [maxLat, maxLng]];
   }, [selected]);
 
-  // POI-Marker für Seniorenheime
+  // POI-Marker für Seniorenheime + Spitäler
   const poiMarkers = useMemo(() => {
-    if (!showSeniorenheime) return [];
-    return seniorenheime.map((h) => ({
-      lat: h.lat,
-      lng: h.lng,
-      name: h.name,
-      details: `${h.adresse}, ${h.plz} Graz\n📞 ${h.telefon}\n${h.kategorie === "ggz" ? "🏥 GGZ (städtisch)" : "🏠 Privat"}`,
-      color: h.kategorie === "ggz" ? "#16a34a" : "#2563eb",
-    }));
-  }, [showSeniorenheime]);
+    const markers: Array<{ lat: number; lng: number; name: string; details: string; color: string }> = [];
+
+    if (showSeniorenheime) {
+      for (const h of seniorenheime) {
+        markers.push({
+          lat: h.lat,
+          lng: h.lng,
+          name: h.name,
+          details: `${h.adresse}, ${h.plz} Graz${h.telefon ? `\n📞 ${h.telefon}` : ""}\n${h.kategorie === "ggz" ? "🏥 GGZ (städtisch)" : "🏠 Privat"}`,
+          color: h.kategorie === "ggz" ? "#16a34a" : "#2563eb",
+        });
+      }
+    }
+
+    if (showSpitaeler) {
+      for (const s of spitaeler) {
+        markers.push({
+          lat: s.lat,
+          lng: s.lng,
+          name: s.name,
+          details: `${s.adresse}, ${s.plz} Graz\n${s.kategorie === "oeffentlich" ? "🏥 Öffentlich" : "🏥 Privatklinik"}`,
+          color: s.kategorie === "oeffentlich" ? "#dc2626" : "#9333ea",
+        });
+      }
+    }
+
+    return markers;
+  }, [showSeniorenheime, showSpitaeler]);
 
   return (
     <div className="h-screen flex flex-col">
@@ -139,16 +160,28 @@ export default function MapView() {
         <h1 className="text-lg font-semibold text-slate-800">
           🗺️ Stadtplan Graz
         </h1>
-        <button
-          onClick={() => setShowSeniorenheime(!showSeniorenheime)}
-          className={`px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1.5 ${
-            showSeniorenheime
-              ? "bg-green-600 text-white"
-              : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
-          }`}
-        >
-          🏥 Seniorenheime ({seniorenheime.length})
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowSeniorenheime(!showSeniorenheime)}
+            className={`px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1.5 ${
+              showSeniorenheime
+                ? "bg-green-600 text-white"
+                : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+            }`}
+          >
+            🏠 Seniorenheime ({seniorenheime.length})
+          </button>
+          <button
+            onClick={() => setShowSpitaeler(!showSpitaeler)}
+            className={`px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1.5 ${
+              showSpitaeler
+                ? "bg-red-600 text-white"
+                : "bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
+            }`}
+          >
+            🏥 Spitäler ({spitaeler.length})
+          </button>
+        </div>
       </div>
 
       {/* Hauptbereich: Sidebar + Karte */}
