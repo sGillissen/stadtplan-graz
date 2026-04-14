@@ -135,7 +135,7 @@ export default function MapView() {
   return (
     <div className="h-screen flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b px-4 py-3 shrink-0 flex items-center justify-between">
+      <div className="bg-white border-b px-4 py-3 shrink-0 flex items-center justify-between relative z-20">
         <h1 className="text-lg font-semibold text-slate-800">
           🗺️ Stadtplan Graz
         </h1>
@@ -154,7 +154,7 @@ export default function MapView() {
       {/* Hauptbereich: Sidebar + Karte */}
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
-        <div className="w-72 bg-white border-r flex flex-col shrink-0">
+        <div className="w-72 bg-white border-r flex flex-col shrink-0 relative z-10">
           {/* Allgemeine Suche (Nominatim) */}
           <div ref={wrapperRef} className="p-3 border-b relative z-[1000]">
             <input
@@ -275,8 +275,8 @@ export default function MapView() {
           </div>
         </div>
 
-        {/* Karte */}
-        <div className="flex-1">
+        {/* Karte – z-0 erzwingt eigenen Stacking Context, damit Leaflet-Tiles (z-200+) nicht Header/Sidebar überdecken */}
+        <div className="flex-1 relative z-0">
           <GrazMap
             clickDisabled
             polylines={polylines}
