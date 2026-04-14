@@ -185,7 +185,7 @@ export default function MapView() {
       </div>
 
       {/* Hauptbereich: Sidebar + Karte */}
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="flex-1 flex overflow-hidden relative min-h-0 min-w-0">
         {/* Sidebar */}
         <div className="w-72 bg-white border-r flex flex-col shrink-0 relative z-10">
           {/* Allgemeine Suche (Nominatim) */}
@@ -298,8 +298,9 @@ export default function MapView() {
           </div>
         </div>
 
-        {/* Karte – isolate erzwingt eigenen Stacking Context, damit Leaflet-Panes (z-200-800) nicht Header/Sidebar überdecken */}
-        <div className="flex-1 isolate">
+        {/* Karte – isolate erzwingt eigenen Stacking Context, damit Leaflet-Panes (z-200-800) nicht Header/Sidebar überdecken.
+             min-w-0 / min-h-0 verhindern, dass Leaflet-Inhalte (Marker/Popups beim Zoomen) den Flex-Container aufblasen. */}
+        <div className="flex-1 isolate overflow-hidden min-w-0 min-h-0">
           <GrazMap
             clickDisabled
             polylines={polylines}
