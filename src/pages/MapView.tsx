@@ -12,7 +12,7 @@ interface NominatimResult {
 export default function MapView() {
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState<StreetRoute | null>(null);
-  const [typeFilter, setTypeFilter] = useState<"all" | "primary" | "secondary">("all");
+  const [typeFilter, setTypeFilter] = useState<"all" | "primary" | "secondary" | "tertiary">("all");
 
   // Nominatim-Suche
   const [searchQuery, setSearchQuery] = useState("");
@@ -95,7 +95,7 @@ export default function MapView() {
     if (!selected) return [];
     return selected.segments.map((seg) => ({
       positions: seg as [number, number][],
-      color: selected.type === "primary" ? "#e63946" : "#f4a261",
+      color: selected.type === "primary" ? "#e63946" : selected.type === "secondary" ? "#f4a261" : "#8b9dc3",
       weight: 5,
       label: selected.name,
     }));
@@ -197,6 +197,16 @@ export default function MapView() {
               >
                 Nebenstraßen
               </button>
+              <button
+                onClick={() => setTypeFilter("tertiary")}
+                className={`px-2 py-1 text-xs rounded-md transition-colors ${
+                  typeFilter === "tertiary"
+                    ? "bg-slate-600 text-white"
+                    : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                Sonstige
+              </button>
             </div>
           </div>
 
@@ -218,7 +228,7 @@ export default function MapView() {
               >
                 <span
                   className={`inline-block w-2 h-2 rounded-full shrink-0 ${
-                    s.type === "primary" ? "bg-red-500" : "bg-amber-400"
+                    s.type === "primary" ? "bg-red-500" : s.type === "secondary" ? "bg-amber-400" : "bg-slate-400"
                   }`}
                 />
                 {s.name}
