@@ -152,7 +152,7 @@ export default function MapView() {
       </div>
 
       {/* Hauptbereich: Sidebar + Karte */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* Sidebar */}
         <div className="w-72 bg-white border-r flex flex-col shrink-0 relative z-10">
           {/* Allgemeine Suche (Nominatim) */}
@@ -275,8 +275,8 @@ export default function MapView() {
           </div>
         </div>
 
-        {/* Karte – z-0 erzwingt eigenen Stacking Context, damit Leaflet-Tiles (z-200+) nicht Header/Sidebar überdecken */}
-        <div className="flex-1 relative z-0">
+        {/* Karte – isolate erzwingt eigenen Stacking Context, damit Leaflet-Panes (z-200-800) nicht Header/Sidebar überdecken */}
+        <div className="flex-1 isolate">
           <GrazMap
             clickDisabled
             polylines={polylines}
