@@ -24,14 +24,22 @@
 - `src/data/seniorenheime.ts` – 26 Pflegeheime/Seniorenheime in Graz (4 GGZ + 22 privat); Koordinaten via Nominatim geocodiert
 - `src/data/spitaeler.ts` – 11 Krankenhäuser in Graz (7 öffentlich + 4 privat); Koordinaten via Nominatim geocodiert
 - `src/data/bezirke.ts` – 17 Grazer Stadtbezirke als Polygon-Ringe `[lat,lng][][]`; aus OSM Overpass (relation 34719, `admin_level=9`); nummeriert I–XVII nach amtlicher Reihenfolge (Innere Stadt=1 … Puntigam=17); ~150 kB statisch im Repo
+- `src/data/streetRoutesAll.ts` – 1.997 weitere Straßen (tertiary, residential, living_street, unclassified, pedestrian) aus Overpass API; wird per Lazy-Load erst bei Klick auf "Alle" geladen → eigener Vite-Chunk (1,5 MB / 411 KB gzip)
+- `src/data/schulen.ts` – 146 Schulen in Graz (7 Kategorien: Volksschule, Sonderschule, Mittelschule, Gymnasium, BHS, Hochschule, Musikschule); Koordinaten via Nominatim geocodiert; Quelle: schulverzeichnis.eu
 
 ### POI-System (Points of Interest)
 - Generische `poiMarkers`-Prop auf GrazMap: Array von `{ lat, lng, name, details, color }`
 - SVG-Pin-Icons via `L.divIcon` mit konfigurierbarer Farbe (`createColorIcon()`)
 - Popup mit Name + mehrzeiligen Details (Adresse, Telefon, Kategorie)
 - Toggle-Buttons im Header: jeder POI-Layer einzeln ein/ausschaltbar
-- Farbschema: Seniorenheime grün (GGZ) / blau (privat); Spitäler rot (öffentlich) / violett (privat)
+- Farbschema: Seniorenheime grün (GGZ) / blau (privat); Spitäler rot (öffentlich) / violett (privat); Schulen nach Typ (amber/violet/cyan/blue/emerald/red/pink)
 - **Neue Kategorien ergänzen:** Datendatei anlegen → in MapView importieren → State + Button + poiMarkers-Logik ergänzen
+
+### Straßen-Filter (4 Buttons)
+- **H+N** (Default): primary + secondary aus `streetRoutes.ts` (147 Straßen)
+- **Haupt**: nur primary
+- **Neben**: nur secondary
+- **Alle**: primary + secondary + Lazy-Load von `streetRoutesAll.ts` (1.997 weitere Straßen). Erster Klick triggert `import()`, danach gecacht. TypeFilter-State: `"hn" | "primary" | "secondary" | "alle"`
 
 ### Nicht mehr genutzte Dateien (Quiz-Überreste)
 - `src/pages/Home.tsx`, `QuizLocation.tsx`, `QuizName.tsx`, `Progress.tsx` – alte Quiz-Seiten, nicht importiert
