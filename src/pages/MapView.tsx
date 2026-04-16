@@ -4,6 +4,7 @@ import { streetRoutes, StreetRoute } from "@/data/streetRoutes";
 import { seniorenheime } from "@/data/seniorenheime";
 import { spitaeler } from "@/data/spitaeler";
 import { bezirke } from "@/data/bezirke";
+import { schulen } from "@/data/schulen";
 
 interface NominatimResult {
   place_id: number;
@@ -25,6 +26,7 @@ export default function MapView() {
   const [showSeniorenheime, setShowSeniorenheime] = useState(false);
   const [showSpitaeler, setShowSpitaeler] = useState(false);
   const [showBezirke, setShowBezirke] = useState(false);
+  const [showSchulen, setShowSchulen] = useState(false);
 
   // Nominatim-Suche
   const [searchQuery, setSearchQuery] = useState("");
@@ -183,8 +185,38 @@ export default function MapView() {
       }
     }
 
+    if (showSchulen) {
+      const schulFarben: Record<string, string> = {
+        volksschule: "#f59e0b",   // amber
+        sonderschule: "#8b5cf6",  // violet
+        mittelschule: "#06b6d4",  // cyan
+        gymnasium: "#2563eb",     // blue
+        bhs: "#059669",           // emerald
+        hochschule: "#dc2626",    // red
+        musikschule: "#ec4899",   // pink
+      };
+      const schulLabels: Record<string, string> = {
+        volksschule: "Volksschule",
+        sonderschule: "Sonderschule",
+        mittelschule: "Mittelschule",
+        gymnasium: "Gymnasium/AHS",
+        bhs: "BHS/Berufsschule",
+        hochschule: "Hochschule",
+        musikschule: "Musikschule",
+      };
+      for (const s of schulen) {
+        markers.push({
+          lat: s.lat,
+          lng: s.lng,
+          name: s.name,
+          details: `${s.adresse}, ${s.plz} Graz\n🎓 ${schulLabels[s.kategorie] || s.kategorie}`,
+          color: schulFarben[s.kategorie] || "#6b7280",
+        });
+      }
+    }
+
     return markers;
-  }, [showSeniorenheime, showSpitaeler]);
+  }, [showSeniorenheime, showSpitaeler, showSchulen]);
 
   // Bezirks-Polygone mit abwechselnden Farben
   const bezirksPolygons = useMemo(() => {
@@ -238,6 +270,16 @@ export default function MapView() {
             }`}
           >
             🏥 Spitäler ({spitaeler.length})
+          </button>
+          <button
+            onClick={() => setShowSchulen(!showSchulen)}
+            className={`px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1.5 ${
+              showSchulen
+                ? "bg-amber-600 text-white"
+                : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
+            }`}
+          >
+            🎓 Schulen ({schulen.length})
           </button>
         </div>
       </div>
