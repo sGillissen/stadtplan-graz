@@ -15,7 +15,11 @@ interface NominatimResult {
 export default function MapView() {
   const [filter, setFilter] = useState("");
   const [selected, setSelected] = useState<StreetRoute | null>(null);
-  const [typeFilter, setTypeFilter] = useState<"all" | "primary" | "secondary">("all");
+  const [typeFilter, setTypeFilter] = useState<"hn" | "primary" | "secondary" | "alle">("hn");
+
+  // Lazy-Load: alle Straßen (tertiary, residential etc.)
+  const [allStreets, setAllStreets] = useState<StreetRoute[] | null>(null);
+  const [loadingAll, setLoadingAll] = useState(false);
 
   // POI-Layer anzeigen
   const [showSeniorenheime, setShowSeniorenheime] = useState(false);
@@ -85,18 +89,45 @@ export default function MapView() {
     setSelected(null);
   };
 
+  // Lazy-Load Trigger: beim Klick auf "Alle"
+  const handleAlleClick = useCallback(async () => {
+    setTypeFilter("alle");
+    if (allStreets) return; // schon geladen
+    setLoadingAll(true);
+    try {
+      const mod = await import("@/data/streetRoutesAll");
+      // streetRoutesAll hat ggf. andere Typen → auf StreetRoute casten
+      setAllStreets(mod.streetRoutesAll as unknown as StreetRoute[]);
+    } catch (e) {
+      console.error("Fehler beim Laden aller Straßen:", e);
+    } finally {
+      setLoadingAll(false);
+    }
+  }, [allStreets]);
+
   // Gefilterte Straßenliste
   const filtered = useMemo(() => {
-    return streetRoutes
+    // Basis: primary+secondary (immer geladen)
+    let source: StreetRoute[] = streetRoutes;
+
+    if (typeFilter === "alle") {
+      // primary+secondary + nachgeladene Straßen
+      source = allStreets ? [...streetRoutes, ...allStreets] : streetRoutes;
+    }
+
+    return source
       .filter((s) => {
-        if (typeFilter !== "all" && s.type !== typeFilter) return false;
+        if (typeFilter === "primary" && s.type !== "primary") return false;
+        if (typeFilter === "secondary" && s.type !== "secondary") return false;
+        // "hn" = primary + secondary (= nur streetRoutes, kein extra Filter nötig)
+        // "alle" = alles aus source
         if (filter.trim().length > 0) {
           return s.name.toLowerCase().includes(filter.toLowerCase());
         }
         return true;
       })
       .sort((a, b) => a.name.localeCompare(b.name, "de"));
-  }, [filter, typeFilter]);
+  }, [filter, typeFilter, allStreets]);
 
   // Polylines für die Karte
   const polylines = useMemo(() => {
@@ -254,14 +285,14 @@ export default function MapView() {
             {/* Typ-Filter */}
             <div className="flex gap-1">
               <button
-                onClick={() => setTypeFilter("all")}
+                onClick={() => setTypeFilter("hn")}
                 className={`px-2 py-1 text-xs rounded-md transition-colors ${
-                  typeFilter === "all"
+                  typeFilter === "hn"
                     ? "bg-slate-800 text-white"
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
-                Alle ({streetRoutes.length})
+                H+N ({streetRoutes.length})
               </button>
               <button
                 onClick={() => setTypeFilter("primary")}
@@ -271,7 +302,7 @@ export default function MapView() {
                     : "bg-red-50 text-red-700 hover:bg-red-100"
                 }`}
               >
-                Hauptstraßen
+                Haupt
               </button>
               <button
                 onClick={() => setTypeFilter("secondary")}
@@ -281,7 +312,17 @@ export default function MapView() {
                     : "bg-amber-50 text-amber-700 hover:bg-amber-100"
                 }`}
               >
-                Nebenstraßen
+                Neben
+              </button>
+              <button
+                onClick={handleAlleClick}
+                className={`px-2 py-1 text-xs rounded-md transition-colors ${
+                  typeFilter === "alle"
+                    ? "bg-violet-600 text-white"
+                    : "bg-violet-50 text-violet-700 hover:bg-violet-100"
+                }`}
+              >
+                {loadingAll ? "Lädt…" : `Alle${allStreets ? ` (${streetRoutes.length + allStreets.length})` : ""}`}
               </button>
             </div>
           </div>
