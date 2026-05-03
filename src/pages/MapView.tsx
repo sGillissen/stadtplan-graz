@@ -42,6 +42,12 @@ export default function MapView() {
   });
   const [hideKnown, setHideKnown] = useState(false);
 
+  // Mobile Bottom-Sheet State: zu / peek / voll
+  const [sheetState, setSheetState] = useState<"closed" | "peek" | "full">("peek");
+  const cycleSheet = () => {
+    setSheetState((s) => (s === "closed" ? "peek" : s === "peek" ? "full" : "closed"));
+  };
+
   const toggleKnown = useCallback((name: string) => {
     setKnownStreets((prev) => {
       const next = new Set(prev);
@@ -117,6 +123,10 @@ export default function MapView() {
     setShowDropdown(false);
     // Auswahl in der Straßenliste aufheben
     setSelected(null);
+    // Auf Mobile: Sheet einklappen damit Karte sichtbar wird
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setSheetState("closed");
+    }
   };
 
   // Lazy-Load Trigger: beim Klick auf "Alle"
@@ -264,59 +274,84 @@ export default function MapView() {
 
   return (
     <div className="h-screen flex flex-col">
-      {/* Header */}
-      <div className="bg-white border-b px-4 py-3 shrink-0 flex items-center justify-between relative z-20">
-        <h1 className="text-lg font-semibold text-slate-800">
+      {/* Header – auf Mobile kompakt (Buttons horizontal scrollbar), auf Desktop volle Breite */}
+      <div className="bg-white border-b px-3 md:px-4 py-2 md:py-3 shrink-0 flex items-center gap-2 md:justify-between relative z-20">
+        <h1 className="text-base md:text-lg font-semibold text-slate-800 shrink-0 hidden sm:block">
           🗺️ Stadtplan Graz
         </h1>
-        <div className="flex gap-2">
+        <span className="text-lg sm:hidden">🗺️</span>
+        <div className="flex gap-1.5 md:gap-2 overflow-x-auto -mx-1 px-1 scrollbar-thin">
           <button
             onClick={() => setShowBezirke(!showBezirke)}
-            className={`px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1.5 ${
+            className={`shrink-0 px-2.5 md:px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1 md:gap-1.5 ${
               showBezirke
                 ? "bg-violet-600 text-white"
                 : "bg-violet-50 text-violet-700 hover:bg-violet-100 border border-violet-200"
             }`}
+            title="Bezirke"
           >
-            🏛 Bezirke ({bezirke.length})
+            🏛 <span className="hidden md:inline">Bezirke </span>({bezirke.length})
           </button>
           <button
             onClick={() => setShowSeniorenheime(!showSeniorenheime)}
-            className={`px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1.5 ${
+            className={`shrink-0 px-2.5 md:px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1 md:gap-1.5 ${
               showSeniorenheime
                 ? "bg-green-600 text-white"
                 : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
             }`}
+            title="Seniorenheime"
           >
-            🏠 Seniorenheime ({seniorenheime.length})
+            🏠 <span className="hidden md:inline">Seniorenheime </span>({seniorenheime.length})
           </button>
           <button
             onClick={() => setShowSpitaeler(!showSpitaeler)}
-            className={`px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1.5 ${
+            className={`shrink-0 px-2.5 md:px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1 md:gap-1.5 ${
               showSpitaeler
                 ? "bg-red-600 text-white"
                 : "bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
             }`}
+            title="Spitäler"
           >
-            🏥 Spitäler ({spitaeler.length})
+            🏥 <span className="hidden md:inline">Spitäler </span>({spitaeler.length})
           </button>
           <button
             onClick={() => setShowSchulen(!showSchulen)}
-            className={`px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1.5 ${
+            className={`shrink-0 px-2.5 md:px-3 py-1.5 text-xs rounded-lg transition-colors flex items-center gap-1 md:gap-1.5 ${
               showSchulen
                 ? "bg-amber-600 text-white"
                 : "bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200"
             }`}
+            title="Schulen"
           >
-            🎓 Schulen ({schulen.length})
+            🎓 <span className="hidden md:inline">Schulen </span>({schulen.length})
           </button>
         </div>
       </div>
 
-      {/* Hauptbereich: Sidebar + Karte */}
-      <div className="flex-1 flex overflow-hidden relative min-h-0 min-w-0">
-        {/* Sidebar */}
-        <div className="w-72 bg-white border-r flex flex-col shrink-0 relative z-10">
+      {/* Hauptbereich:
+          Desktop: Sidebar links + Karte rechts (flex-row)
+          Mobile: Karte vollflächig + Sidebar als Bottom-Sheet (absolute) */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative min-h-0 min-w-0">
+        {/* Sidebar – Desktop: links statisch / Mobile: Bottom-Sheet absolute */}
+        <div
+          className={`bg-white flex flex-col shrink-0 z-30 transition-[height] duration-300 ease-out
+            absolute bottom-0 left-0 right-0 border-t shadow-lg rounded-t-2xl
+            md:static md:bottom-auto md:left-auto md:right-auto
+            md:w-72 md:border-r md:border-t-0 md:shadow-none md:rounded-none md:z-10
+            ${sheetState === "closed" ? "h-12" : sheetState === "peek" ? "h-[260px]" : "h-[75vh]"}
+            md:!h-auto`}
+        >
+          {/* Toggle-Griff – nur Mobile */}
+          <button
+            onClick={cycleSheet}
+            className="md:hidden w-full py-2 flex flex-col items-center justify-center gap-0.5 border-b text-slate-500 active:bg-slate-50"
+            aria-label="Liste umschalten"
+          >
+            <span className="block w-10 h-1 bg-slate-300 rounded-full" />
+            <span className="text-[10px] uppercase tracking-wider">
+              {sheetState === "closed" ? "▲ Liste öffnen" : sheetState === "peek" ? "▲ Mehr" : "▼ Schließen"}
+            </span>
+          </button>
           {/* Allgemeine Suche (Nominatim) */}
           <div ref={wrapperRef} className="p-3 border-b relative z-[1000]">
             <input
@@ -418,7 +453,7 @@ export default function MapView() {
               return (
                 <div
                   key={s.name}
-                  className={`px-3 py-2 text-sm border-b transition-colors flex items-center gap-2 ${
+                  className={`px-3 py-3 md:py-2 text-sm border-b transition-colors flex items-center gap-3 ${
                     isSelected
                       ? "bg-violet-50 text-violet-900 font-medium"
                       : isKnown
@@ -434,7 +469,7 @@ export default function MapView() {
                       toggleKnown(s.name);
                     }}
                     onClick={(e) => e.stopPropagation()}
-                    className="shrink-0 cursor-pointer accent-emerald-600"
+                    className="shrink-0 cursor-pointer accent-emerald-600 w-5 h-5"
                     title={isKnown ? "Als unbekannt markieren" : "Als bekannt markieren"}
                   />
                   <button
@@ -442,11 +477,15 @@ export default function MapView() {
                       setSelected(s === selected ? null : s);
                       setSearchMarker(null);
                       setFlyTarget(undefined);
+                      // Auf Mobile: Sheet einklappen
+                      if (typeof window !== "undefined" && window.innerWidth < 768) {
+                        setSheetState("closed");
+                      }
                     }}
-                    className="flex-1 text-left flex items-center gap-2 min-w-0"
+                    className="flex-1 text-left flex items-center gap-2 min-w-0 py-1"
                   >
                     <span
-                      className={`inline-block w-2 h-2 rounded-full shrink-0 ${
+                      className={`inline-block w-2.5 h-2.5 rounded-full shrink-0 ${
                         s.type === "primary" ? "bg-red-500" : s.type === "secondary" ? "bg-amber-400" : "bg-slate-400"
                       }`}
                     />

@@ -15,6 +15,14 @@ html, body, #root {
   height: 100%;
 }
 
+/* iOS Safari zoomt beim Fokus auf Inputs mit Schrift < 16px → auf Mobile aufzwingen */
+@media (max-width: 767px) {
+  input[type="text"],
+  input[type="search"] {
+    font-size: 16px !important;
+  }
+}
+
 /* Crosshair-Cursor auf der Karte im Quiz-Modus */
 .cursor-crosshair .leaflet-container {
   cursor: crosshair !important;

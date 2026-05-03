@@ -2,7 +2,7 @@
 
 **Letzte Aktualisierung:** 16.04.2026
 **Slug:** `stadtplan-graz`
-**Kontext:** `Brain/02 Projekte/` (aktuell kein eigener Eintrag — bei Bedarf ergänzen)
+**Kontext:** `./CONTEXT.md`
 **Repo:** GitHub `sGillissen/stadtplan-graz`
 **Deployment:** [stadtplan-graz.pages.dev](https://stadtplan-graz.pages.dev) (Cloudflare Pages, Auto-Deploy bei Push auf `main`)
 
