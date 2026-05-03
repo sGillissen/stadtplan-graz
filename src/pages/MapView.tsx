@@ -42,8 +42,10 @@ export default function MapView() {
   });
   const [hideKnown, setHideKnown] = useState(false);
 
-  // Mobile Bottom-Sheet State: zu / peek / voll
-  const [sheetState, setSheetState] = useState<"closed" | "peek" | "full">("peek");
+  // Mobile Bottom-Sheet State: zu / peek / voll – Default voll auf Mobile
+  const [sheetState, setSheetState] = useState<"closed" | "peek" | "full">(() =>
+    typeof window !== "undefined" && window.innerWidth < 768 ? "full" : "peek"
+  );
   const cycleSheet = () => {
     setSheetState((s) => (s === "closed" ? "peek" : s === "peek" ? "full" : "closed"));
   };
@@ -144,15 +146,6 @@ export default function MapView() {
       setLoadingAll(false);
     }
   }, [allStreets]);
-
-  // Auf Mobile: standardmäßig alle Straßen laden (damit Liste-Suche alles findet)
-  useEffect(() => {
-    if (typeof window !== "undefined" && window.innerWidth < 768) {
-      handleAlleClick();
-    }
-    // nur einmal beim Mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Gefilterte Straßenliste
   const filtered = useMemo(() => {
