@@ -1,6 +1,6 @@
 # Stadtplan Graz — Status
 
-**Letzte Aktualisierung:** 16.04.2026
+**Letzte Aktualisierung:** 03.05.2026
 **Slug:** `stadtplan-graz`
 **Kontext:** `./CONTEXT.md`
 **Repo:** GitHub `sGillissen/stadtplan-graz`
@@ -16,11 +16,16 @@ Interaktiver Stadtplan von Graz mit Straßenverläufen, Adress-Suche und POI-Lay
 
 | Prio | Thema |
 |---|---|
-| niedrig | **Mobile Ansicht** — Sidebar auf kleinen Screens optimieren (z.B. ausklappbar) |
 | niedrig | **Quiz-Dateien aufräumen** — `Home.tsx`, `QuizLocation.tsx`, `QuizName.tsx`, `Progress.tsx`, `useProgress.ts`, `streets.ts` liegen noch im Repo (tree-shaked) |
 | optional | **Weitere POI-Layer** — Apotheken, Kindergärten etc. leicht ergänzbar dank generischem `poiMarkers`-System |
+| optional | **Bekannte Straßen geräteübergreifend** — aktuell nur localStorage; bei Bedarf Supabase-Anbindung |
+| optional | **Bottom-Sheet Drag-Geste** — derzeit nur Toggle-Button (3 States); Drag-Geste später nachrüstbar |
 
 ## Verlauf
+
+### 03.05.2026 — Session 16
+- ✅ **Bekannte Straßen markieren:** Checkbox pro Straße in der Sidebar (links neben Typ-Punkt); Persistenz in `localStorage` (Key `stadtplan_known_streets`); bekannte Straßen werden in der Liste gedimmt; neuer Filter-Button „Nur unbekannte" als eigene Zeile unter den Typ-Filtern (kostet keine Breite); Footer zeigt Anzahl bekannter Straßen
+- ✅ **Mobile-Layout (Bottom-Sheet-Pattern):** Karte vollflächig, Sidebar als Bottom-Sheet mit 3 States (zu/peek/voll) per Toggle-Button; Auto-Collapse nach Klick auf Straße oder Suchergebnis; Header auf Mobile mit Icon-only-Chips; Touch-Targets vergrößert (Listeneintrag py-3, Checkbox 20×20); iOS-Auto-Zoom auf Inputs verhindert (font-size 16px); Default-Sheet-State auf Mobile = voll; Adress-Suche (Nominatim) auf Mobile ausgeblendet (Suche läuft nur via Listen-Filter)
 
 ### 16.04.2026 — Session 15
 - ✅ **Alle Straßen als 4. Button:** 1.997 zusätzliche Straßen (tertiary, residential, living_street, unclassified, pedestrian) aus Overpass API; neue Datei `streetRoutesAll.ts` (1,4 MB) wird per Lazy-Load (`import()`) erst beim Klick auf „Alle" geladen → eigener Vite-Chunk, kein Impact auf initiale Ladezeit; Buttons umbenannt: H+N / Haupt / Neben / Alle
