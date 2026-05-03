@@ -28,6 +28,34 @@ export default function MapView() {
   const [showBezirke, setShowBezirke] = useState(false);
   const [showSchulen, setShowSchulen] = useState(false);
 
+  // Bekannte Straßen (persistiert in localStorage)
+  const KNOWN_STORAGE_KEY = "stadtplan_known_streets";
+  const [knownStreets, setKnownStreets] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem(KNOWN_STORAGE_KEY);
+      if (!raw) return new Set();
+      const arr = JSON.parse(raw);
+      return new Set(Array.isArray(arr) ? arr : []);
+    } catch {
+      return new Set();
+    }
+  });
+  const [hideKnown, setHideKnown] = useState(false);
+
+  const toggleKnown = useCallback((name: string) => {
+    setKnownStreets((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      try {
+        localStorage.setItem(KNOWN_STORAGE_KEY, JSON.stringify([...next]));
+      } catch {
+        // localStorage voll oder deaktiviert – stillschweigend ignorieren
+      }
+      return next;
+    });
+  }, []);
+
   // Nominatim-Suche
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<NominatimResult[]>([]);
@@ -123,13 +151,14 @@ export default function MapView() {
         if (typeFilter === "secondary" && s.type !== "secondary") return false;
         // "hn" = primary + secondary (= nur streetRoutes, kein extra Filter nötig)
         // "alle" = alles aus source
+        if (hideKnown && knownStreets.has(s.name)) return false;
         if (filter.trim().length > 0) {
           return s.name.toLowerCase().includes(filter.toLowerCase());
         }
         return true;
       })
       .sort((a, b) => a.name.localeCompare(b.name, "de"));
-  }, [filter, typeFilter, allStreets]);
+  }, [filter, typeFilter, allStreets, hideKnown, knownStreets]);
 
   // Polylines für die Karte
   const polylines = useMemo(() => {
@@ -367,32 +396,65 @@ export default function MapView() {
                 {loadingAll ? "Lädt…" : `Alle${allStreets ? ` (${streetRoutes.length + allStreets.length})` : ""}`}
               </button>
             </div>
+            {/* Filter: nur unbekannte Straßen */}
+            <button
+              onClick={() => setHideKnown(!hideKnown)}
+              className={`w-full px-2 py-1 text-xs rounded-md transition-colors ${
+                hideKnown
+                  ? "bg-emerald-600 text-white"
+                  : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
+              }`}
+              title="Bekannte Straßen ausblenden"
+            >
+              {hideKnown ? "✓ Nur unbekannte" : `Nur unbekannte (${knownStreets.size} bekannt)`}
+            </button>
           </div>
 
           {/* Straßenliste */}
           <div className="flex-1 overflow-y-auto">
-            {filtered.map((s) => (
-              <button
-                key={s.name}
-                onClick={() => {
-                  setSelected(s === selected ? null : s);
-                  setSearchMarker(null);
-                  setFlyTarget(undefined);
-                }}
-                className={`w-full text-left px-3 py-2 text-sm border-b transition-colors flex items-center gap-2 ${
-                  selected?.name === s.name
-                    ? "bg-violet-50 text-violet-900 font-medium"
-                    : "hover:bg-slate-50 text-slate-700"
-                }`}
-              >
-                <span
-                  className={`inline-block w-2 h-2 rounded-full shrink-0 ${
-                    s.type === "primary" ? "bg-red-500" : s.type === "secondary" ? "bg-amber-400" : "bg-slate-400"
+            {filtered.map((s) => {
+              const isKnown = knownStreets.has(s.name);
+              const isSelected = selected?.name === s.name;
+              return (
+                <div
+                  key={s.name}
+                  className={`px-3 py-2 text-sm border-b transition-colors flex items-center gap-2 ${
+                    isSelected
+                      ? "bg-violet-50 text-violet-900 font-medium"
+                      : isKnown
+                      ? "text-slate-400 hover:bg-slate-50"
+                      : "text-slate-700 hover:bg-slate-50"
                   }`}
-                />
-                {s.name}
-              </button>
-            ))}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isKnown}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      toggleKnown(s.name);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="shrink-0 cursor-pointer accent-emerald-600"
+                    title={isKnown ? "Als unbekannt markieren" : "Als bekannt markieren"}
+                  />
+                  <button
+                    onClick={() => {
+                      setSelected(s === selected ? null : s);
+                      setSearchMarker(null);
+                      setFlyTarget(undefined);
+                    }}
+                    className="flex-1 text-left flex items-center gap-2 min-w-0"
+                  >
+                    <span
+                      className={`inline-block w-2 h-2 rounded-full shrink-0 ${
+                        s.type === "primary" ? "bg-red-500" : s.type === "secondary" ? "bg-amber-400" : "bg-slate-400"
+                      }`}
+                    />
+                    <span className="truncate">{s.name}</span>
+                  </button>
+                </div>
+              );
+            })}
             {filtered.length === 0 && (
               <p className="px-3 py-4 text-sm text-slate-400 text-center">
                 Keine Straßen gefunden
@@ -404,7 +466,7 @@ export default function MapView() {
           <div className="p-3 border-t text-xs text-slate-400">
             {selected
               ? `${selected.name} · ${selected.segments.length} Segmente`
-              : `${filtered.length} Straßen · Klicke zum Anzeigen`}
+              : `${filtered.length} Straßen · ${knownStreets.size} bekannt`}
           </div>
         </div>
 
