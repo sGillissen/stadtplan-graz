@@ -145,6 +145,15 @@ export default function MapView() {
     }
   }, [allStreets]);
 
+  // Auf Mobile: standardmäßig alle Straßen laden (damit Liste-Suche alles findet)
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      handleAlleClick();
+    }
+    // nur einmal beim Mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Gefilterte Straßenliste
   const filtered = useMemo(() => {
     // Basis: primary+secondary (immer geladen)
@@ -352,8 +361,8 @@ export default function MapView() {
               {sheetState === "closed" ? "▲ Liste öffnen" : sheetState === "peek" ? "▲ Mehr" : "▼ Schließen"}
             </span>
           </button>
-          {/* Allgemeine Suche (Nominatim) */}
-          <div ref={wrapperRef} className="p-3 border-b relative z-[1000]">
+          {/* Allgemeine Suche (Nominatim) – auf Mobile ausgeblendet */}
+          <div ref={wrapperRef} className="hidden md:block p-3 border-b relative z-[1000]">
             <input
               type="text"
               value={searchQuery}
