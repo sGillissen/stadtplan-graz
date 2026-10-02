@@ -109,3 +109,14 @@
 - Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
 - Cloudflare Pages Projekt: `stadtplan-graz`
 - SPA-Routing funktioniert automatisch (Cloudflare Pages liefert index.html für alle Routen)
+
+## ⚠️ OSM/Overpass: Graz ist `admin_level=6` (Statutarstadt), nicht 8
+
+- Graz ist in OpenStreetMap als Statutarstadt mit `admin_level=6` getaggt, nicht 8 wie andere Städte
+- Queries mit `area["name"="Graz"]["admin_level"="8"]` finden NICHTS → stundenlange Verwirrung
+- **Immer mit Relation-ID arbeiten:** Graz = `relation 34719` → Overpass Area-ID = `3600034719`
+- Nominatim liefert die Relation-ID: `https://nominatim.openstreetmap.org/search?q=Graz&format=json` → `osm_id: 34719`
+- Hierarchie: `admin_level=6` = Stadt, `admin_level=9` = 17 Stadtbezirke
+- Betrifft alle OSM-Abfragen für Graz (auch potentiell Mediation Graz)
+
+*(Verschoben aus der globalen CLAUDE.md, 21.07.2026 — dort war es projektfremd.)*
